@@ -1,4 +1,5 @@
-a
-bb
-ccc
-dddd
+3D
+4R
+2R
+1R
+1L
