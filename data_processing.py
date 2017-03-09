@@ -6,6 +6,7 @@
 #   - Sensor distance in travel direction gets low -> Slowly turn that motor on/slowly turn opposing motor off
 #	- Turn on motor opposite of direction of travel -> Slowly turn on motor opposite of desired travel direction
 
+#WORK
 
 import os
 import RPi.GPIO as GPIO
