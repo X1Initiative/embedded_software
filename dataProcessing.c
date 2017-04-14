@@ -41,12 +41,21 @@
 		char line[256];
 		int i;
 		if (fgets(line, sizeof(line), stdin)) {
-		    if (strlen(line) == 6)	{
-		    	// Check first character == 1,2,3,4
-		    	// Set motor_num = first character
-		    	// Check that pulse is between 1000 <-> 2000
-		    	// Change motor[motor_num].pulse = new_pulse
-		    }
+			 if (strlen(line) == 6) {
+				// Cast to int and check first character == 1,2,3,4
+				int motor_num = (line[0] - '0');
+				if (motor_num > 0 && motor_num < 5){
+					int p = 0;
+					for (int i = 2; i < 6; i++) {
+						p = p * 10 + (line[i] - '0');
+					}
+
+					 // Check that pulse is between 1000 <-> 2000
+					if (p >= 1000 && p <= 2000) {
+						my_motor[motor_num].pulse = p;
+					}
+				}
+			}
 		}
 	}
 }
