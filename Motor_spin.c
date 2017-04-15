@@ -31,8 +31,7 @@ void sample()
 		if (PULSE == 1250 || PULSE == 1500 || PULSE == 1750)
 		{
 			printf("STEP\n");
-		}
-		
+		}	
 	}
 	
 	for (PULSE = PULSE; PULSE >= 1000; PULSE -= 100)
@@ -42,10 +41,8 @@ void sample()
 		delayMicroseconds(PULSE); 
 		digitalWrite(PIN,LOW); 
 		delay(20 - (PULSE/1000));
-	}
-	
+	}	
 }
-
 int main(void)
 {
 	setup(); 
@@ -53,11 +50,5 @@ int main(void)
 	{
 		sample();
 	}
-	
-
 	return(0);		
 }
-
-
-
-
