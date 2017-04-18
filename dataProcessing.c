@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include "Motor.h"
 
-#define NUM_MOTORS 4
+#define NUM_MOTORS 1
 
 
 *void motorThreadFunction(*void motor)
