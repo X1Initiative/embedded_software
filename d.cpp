@@ -3,8 +3,6 @@
 #include <wiringPi>
 #include <time>
 
-//github test
-
 //#define TRUE 1
  
 int TRIG = 27;
