@@ -4,7 +4,7 @@
 #include <time.h>
 
 
-int PIN = 7; 
+int PIN = 0; 
 
 void setup()
 {
@@ -13,6 +13,12 @@ void setup()
 	int PULSE = 1000; 
 	pinMode (PIN,OUTPUT);
 	int arming_time; 
+	digitalWrite(PIN,HIGH);
+	while (1)
+	{
+		int x = 1; 
+	}
+	
 	for (arming_time = 0; arming_time < 200; arming_time++)
 	{
 		digitalWrite(PIN,HIGH); 
