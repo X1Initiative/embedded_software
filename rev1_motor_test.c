@@ -24,6 +24,7 @@ void setup()
 		digitalWrite(PIN,LOW); 
 		delay(20 - (PULSE/1000));
 	}
+	
 }
 
 void input_wait(void *ptr)
