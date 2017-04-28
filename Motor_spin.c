@@ -1,10 +1,9 @@
-
 #include <stdio.h>
 #include <wiringPi.h>
 #include <time.h>
 
 
-int PIN = 0; 
+int PIN = 7; 
 
 void setup()
 {
@@ -14,10 +13,6 @@ void setup()
 	pinMode (PIN,OUTPUT);
 	int arming_time; 
 	digitalWrite(PIN,HIGH);
-	while (1)
-	{
-		int x = 1; 
-	}
 	
 	for (arming_time = 0; arming_time < 200; arming_time++)
 	{
@@ -25,6 +20,7 @@ void setup()
 		delayMicroseconds(PULSE); 
 		digitalWrite(PIN,LOW); 
 		delay(20 - (PULSE/1000));
+		printf("Here");
 	}
 }
 
