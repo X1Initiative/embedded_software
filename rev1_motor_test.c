@@ -17,6 +17,7 @@ void setup()
 	int arming_time; 
 	digitalWrite(PIN,HIGH);
 	
+	
 	for (arming_time = 0; arming_time < 200; arming_time++)
 	{
 		digitalWrite(PIN,HIGH); 
