@@ -4,39 +4,81 @@
 #include <pthread.h>
 
 
-
-int global_PULSE = 1000;
-int PIN = 7; 	
+// Pulse for all motors set to 1000
+int global_PULSE[4] = {1000};
+// Pins for all motors
+int PIN[4]= {7,0,2,3}; 	
 pthread_mutex_t lock;
+
 void setup()
 {
-	
 	wiringPiSetup (); 
 	int PULSE = 1000; 
-	pinMode (PIN,OUTPUT);
-	int arming_time; 
-	digitalWrite(PIN,HIGH);
 	
+	// Setup all motors	
+	pinMode (PIN[0],OUTPUT);
+	digitalWrite(PIN[0],HIGH);
+	pinMode (PIN[1],OUTPUT);
+	digitalWrite(PIN[1],HIGH);
+	pinMode (PIN[2],OUTPUT);
+	digitalWrite(PIN[2],HIGH);
+	pinMode (PIN[3],OUTPUT);
+	digitalWrite(PIN[3],HIGH);
+
+	// Arm all motors.
+	int arming_time;
 	
+	// Motor1
 	for (arming_time = 0; arming_time < 200; arming_time++)
 	{
-		digitalWrite(PIN,HIGH); 
+		digitalWrite(PIN[0],HIGH); 
 		delayMicroseconds(PULSE); 
-		digitalWrite(PIN,LOW); 
+		digitalWrite(PIN[0],LOW); 
 		delay(20 - (PULSE/1000));
 	}
 	
+	// Motor2
+	for (arming_time = 0; arming_time < 200; arming_time++)
+	{
+		digitalWrite(PIN[1],HIGH); 
+		delayMicroseconds(PULSE); 
+		digitalWrite(PIN[1],LOW); 
+		delay(20 - (PULSE/1000));
+	}
+	
+	// Motor3
+	for (arming_time = 0; arming_time < 200; arming_time++)
+	{
+		digitalWrite(PIN[2],HIGH); 
+		delayMicroseconds(PULSE); 
+		digitalWrite(PIN[2],LOW); 
+		delay(20 - (PULSE/1000));
+	}
+	
+	// Motor4
+	for (arming_time = 0; arming_time < 200; arming_time++)
+	{
+		digitalWrite(PIN[3],HIGH); 
+		delayMicroseconds(PULSE); 
+		digitalWrite(PIN[3],LOW); 
+		delay(20 - (PULSE/1000));
+	}
 }
 
-void input_wait(void *ptr)
+void input_wait(void *ptr[])
 {
-    int *current_val;
-    current_val = (int *) ptr;
+    int *current_val[4];
+ // current_val = (int *) ptr;
+    // Copy contents of ptr to current_val
+	memcpy((void *) current_val, ptr, 16);
+	// *Unable to assign ptr to current_val
+
     while (1)
     {
         pthread_mutex_lock(&lock);
         printf("Enter New Value:");
-        scanf("%d",current_val);
+        // Input value in format 1000 1000 1000 1000
+		scanf("%d %d %d %d", &current_val[0], &current_val[1], &current_val[2], &current_val[3]);
         pthread_mutex_unlock(&lock);
     }
 }
@@ -45,14 +87,23 @@ void input_wait(void *ptr)
 int main()
 {
     setup();
-
+	
     pthread_mutex_init (&lock,NULL);
+    
+    // Input initial pulse
+    int PULSE;
     printf("Enter Starting Motor Pulse Speed in MicroSecond: ");
-    scanf("%d",&global_PULSE);
+    scanf("%d",&PULSE);
+    // Update pulse for all motors
+    global_PULSE[0] = PULSE;
+    global_PULSE[1] = PULSE;
+    global_PULSE[2] = PULSE;
+    global_PULSE[3] = PULSE;
+    
     pthread_t thread;
     pthread_create(&thread, NULL, (void *) &input_wait, (void *) &global_PULSE);
 
-    int test = global_PULSE;
+    //int test = global_PULSE;
     while (1)
     {
         //This code here will run on an infinite loop until the program stops
@@ -67,14 +118,25 @@ int main()
             printf("New Pulse being run: %d\n",global_PULSE);
             pthread_mutex_unlock(&lock);
         }*/
+			digitalWrite(PIN[0],HIGH);
+			digitalWrite(PIN[1],HIGH);
+			digitalWrite(PIN[2],HIGH);
+			digitalWrite(PIN[3],HIGH);
 
-    		digitalWrite(PIN,HIGH);
-    		delayMicroseconds(global_PULSE);
-    		digitalWrite(PIN,LOW);
-    		delay(20 - (global_PULSE/1000));
-    	
-    	
-        
+			delayMicroseconds(global_PULSE[0]);
+			delayMicroseconds(global_PULSE[1]);
+			delayMicroseconds(global_PULSE[2]);
+			delayMicroseconds(global_PULSE[3]);
+			
+			digitalWrite(PIN[0],LOW);
+			digitalWrite(PIN[1],LOW);
+			digitalWrite(PIN[2],LOW);
+			digitalWrite(PIN[3],LOW);
+			
+			delay(20 - (global_PULSE[0]/1000));
+			delay(20 - (global_PULSE[1]/1000));
+			delay(20 - (global_PULSE[2]/1000));
+			delay(20 - (global_PULSE[3]/1000));
     }
 
     pthread_join(&thread,NULL);
