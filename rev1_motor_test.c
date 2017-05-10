@@ -27,51 +27,28 @@ void setup()
 
 	// Arm all motors.
 	int arming_time;
-	
-	// Motor1
 	for (arming_time = 0; arming_time < 200; arming_time++)
 	{
-		digitalWrite(PIN[0],HIGH); 
-		delayMicroseconds(PULSE); 
-		digitalWrite(PIN[0],LOW); 
-		delay(20 - (PULSE/1000));
-	}
-	
-	// Motor2
-	for (arming_time = 0; arming_time < 200; arming_time++)
-	{
-		digitalWrite(PIN[1],HIGH); 
-		delayMicroseconds(PULSE); 
-		digitalWrite(PIN[1],LOW); 
-		delay(20 - (PULSE/1000));
-	}
-	
-	// Motor3
-	for (arming_time = 0; arming_time < 200; arming_time++)
-	{
+		digitalWrite(PIN[0],HIGH);
+		digitalWrite(PIN[1],HIGH);
 		digitalWrite(PIN[2],HIGH); 
-		delayMicroseconds(PULSE); 
-		digitalWrite(PIN[2],LOW); 
-		delay(20 - (PULSE/1000));
-	}
-	
-	// Motor4
-	for (arming_time = 0; arming_time < 200; arming_time++)
-	{
-		digitalWrite(PIN[3],HIGH); 
-		delayMicroseconds(PULSE); 
-		digitalWrite(PIN[3],LOW); 
+		digitalWrite(PIN[3],HIGH);
+		 
+		delayMicroseconds(PULSE);
+		
+		digitalWrite(PIN[0],LOW);
+		digitalWrite(PIN[1],LOW);
+		digitalWrite(PIN[2],LOW);
+		digitalWrite(PIN[3],LOW);
+		 
 		delay(20 - (PULSE/1000));
 	}
 }
 
-void input_wait(void *ptr[])
+void input_wait(void *ptr)
 {
-    int *current_val[4];
- // current_val = (int *) ptr;
-    // Copy contents of ptr to current_val
-	memcpy((void *) current_val, ptr, 16);
-	// *Unable to assign ptr to current_val
+    int *current_val;
+    current_val = (int *) ptr;
 
     while (1)
     {
@@ -118,6 +95,7 @@ int main()
             printf("New Pulse being run: %d\n",global_PULSE);
             pthread_mutex_unlock(&lock);
         }*/
+        
 			digitalWrite(PIN[0],HIGH);
 			digitalWrite(PIN[1],HIGH);
 			digitalWrite(PIN[2],HIGH);
@@ -139,7 +117,7 @@ int main()
 			delay(20 - (global_PULSE[3]/1000));
     }
 
-    pthread_join(&thread,NULL);
+    pthread_join(thread,NULL);
 
     printf("\nCurrent: %d\n", global_PULSE);
 
