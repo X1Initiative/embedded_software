@@ -11,8 +11,11 @@
 //	To run:	gcc a.c -o test1 -lwiringPi
 //			./test1
 
-#define TRIG 2
-#define ECHO 8
+// Code is working: Used as sample code for individually testing 1 sensors. 
+
+
+#define TRIG 7
+#define ECHO 0
  
 void setup() {
         wiringPiSetup();
@@ -29,7 +32,9 @@ int getCM() {
         digitalWrite(TRIG, HIGH);
         delayMicroseconds(20);
         digitalWrite(TRIG, LOW);
- 
+        
+        
+        delayMicroseconds(500);
         //Wait for echo start
         while(digitalRead(ECHO) == LOW)
         {
