@@ -11,13 +11,12 @@
 //	To run:	gcc a.c -o test1 -lwiringPi
 //			./test1
 
-/* TO DO: 1) implement get_CM and return distance, 
- * 2) send a pulse for all sensors at a suitable frequency in main
- * 3) test that distance is received from all sensors for each cycle
- */
+/* Code is currently working and up to date for sensor bed tests.
+*/
 
 #define TRIG 2
 int ECHO[8] = {3,4,7,11,16,18,24,26};
+int distance[8] = {0,0,0,0,0,0,0,0};
 pthread_mutex_t lock;
  
 void setup() {
@@ -97,17 +96,27 @@ int getCM() {
         return distance;
 }*/
 
-void get_CM(void *ptr)
+void *get_CM(void *ptr)
 {
-	int *current_val;
-    current_val = (int *) ptr;
+   int *sensor_num;
+   sensor_num = (int *) ptr;
+   int index = *sensor_num - 1;
     
-    printf("Printing Value for Thread Number: %d\n", *current_val);
-    
-    //Wait for echo to be HIGH
-    //Calculate distance based on startTime and travelTime
-    
-    
+   printf("Printing Value for Thread Number: %d\n", *sensor_num);
+   
+   //Wait for echo start
+   while (1)
+   {
+	   while(digitalRead(ECHO[index]) == LOW);
+	   
+	   //Wait for echo end
+	   long startTime = micros();
+	   while(digitalRead(ECHO[index]) == HIGH);
+	   long travelTime = micros() - startTime;
+	 
+	   //Get distance in cm
+	   distance[index] = travelTime / 58;
+	}
 }
 
  
@@ -117,21 +126,27 @@ int main(void) {
 		pthread_t thread[8];
 		void *status;
 		
+		int order[8] = {1,2,3,4,5,6,7,8};
 		int i, rc;
 		for (i = 0; i < 8; i++) {
-			rc = pthread_create(&thread[i], NULL, (void *) &get_CM, (void *) &ECHO[i]);
+			rc = pthread_create(&thread[i], NULL, (void *) &get_CM, (void *) &order[i]);
 			
 			if (rc){
 				printf("Error:unable to create thread, %d\n", rc);
 			}
 		}
 		
-		// run a while loop at a frequency based on a the appropriate delay time
 		// Send pulse through TRIG for all sensors
-		
+		while (1) {
+			digitalWrite(TRIG, HIGH);
+			delayMicroseconds(20);
+			digitalWrite(TRIG, LOW);
+			delayMicroseconds(500);
+		}
 		
 		for (i = 0; i < 8; i++) {
 			rc = pthread_join(thread[i], &status);
+			printf("Distance for sensor %d: %d\n", i, distance[i]);
 			
 			if (rc){
 				printf("Error:unable to join, %d\n", rc);
