@@ -5,7 +5,9 @@
 
 
 // Pulse for all motors set to 1000
-int global_PULSE[4] = {1000};
+int global_PULSE[4] = {1000,1000,1000,1000};
+int order[4]        = {0,1,2,3};
+int difference[3]   = {0,0,0};
 // Pins for all motors
 int PIN[4]= {7,0,2,3};
 pthread_mutex_t lock;
@@ -26,6 +28,8 @@ void setup()
 	digitalWrite(PIN[3],HIGH);
 
 	// Arm all motors.
+    // Speed controller expects to see low thruttle signal on startup
+    // This corresponds to 1ms on, 19ms off.
 	int arming_time;
 	for (arming_time = 0; arming_time < 200; arming_time++)
 	{
@@ -44,6 +48,7 @@ void setup()
 		delay(20 - (PULSE/1000));
 	}
 }
+
 /* Helper function for finding the max of two numbers */
 int max(int x, int y)
 {
@@ -86,7 +91,7 @@ void merge_helper(int *input, int left, int right, int *scratch)
              * so, we compare them.  Otherwise, we know that the merge must
              * use take the element from the left array */
             if(l < left + midpoint_distance &&
-                    (r == right || max(input[l], input[r]) == input[l]))
+                        (r == right || max(input[l], input[r]) == input[l]))
             {
                 scratch[i] = input[l];
                 l++;
@@ -131,13 +136,14 @@ void input_wait(void *ptr)
 {
     int *current_val;
     current_val = (int *) ptr;
+    int copy[4];
 
     while (1)
     {
         pthread_mutex_lock(&lock);
         printf("Enter New Value:");
         // Input value in format 1000 1000 1000 1000
-		scanf("%d %d %d %d", &current_val[0], &current_val[1], &current_val[2], &current_val[3]);
+		scanf("%d %d %d %d", &copy[0], &copy[1], &copy[2], &copy[3]);
         pthread_mutex_unlock(&lock);
 
         // perform calcs here to set output values for the order of which motors will be turned off
@@ -164,6 +170,7 @@ int main()
     global_PULSE[2] = PULSE;
     global_PULSE[3] = PULSE;
 
+
     pthread_t thread;
     pthread_create(&thread, NULL, (void *) &input_wait, (void *) &global_PULSE);
 
@@ -186,18 +193,14 @@ int main()
 		digitalWrite(PIN[3],HIGH);
 
 		delayMicroseconds(global_PULSE[0]);
-		delayMicroseconds(global_PULSE[1]);
-		delayMicroseconds(global_PULSE[2]);
-		delayMicroseconds(global_PULSE[3]);
-
 		digitalWrite(PIN[0],LOW);
+        delayMicroseconds(difference[0]);
 		digitalWrite(PIN[1],LOW);
+        delayMicroseconds(difference[1]);
 		digitalWrite(PIN[2],LOW);
+        delayMicroseconds(difference[2]);
 		digitalWrite(PIN[3],LOW);
 
-		delay(20 - (global_PULSE[0]/1000));
-		delay(20 - (global_PULSE[1]/1000));
-		delay(20 - (global_PULSE[2]/1000));
 		delay(20 - (global_PULSE[3]/1000));
     }
 
