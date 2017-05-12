@@ -1,10 +1,10 @@
 #include <stdio.h>
 #define max 3
 
-int global_PULSE[4]     = {1000,12314,1900,26};
+int global_PULSE[4]     = {4,3,2,1};
 int order[4]            = {0,1,2,3};
-int buffer[4]           = {0,0,0,0,0,0};
-int buffer2[4]          = {0,0,0};
+int buffer[4]           = {0,0,0,0};
+int buffer2[4]          = {0,0,0,0};
 
 void merging(int low, int mid, int high) {
     int l1, l2, i;

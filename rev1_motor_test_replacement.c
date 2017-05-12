@@ -3,12 +3,21 @@
 #include <time.h>
 #include <pthread.h>
 
+/* STATUS
+ * Merge_sort seems to be broken for switching stuff in the zero place. 
+ * This is most likely due to the other code because the sort works fine on
+ * its own, just not in the rest of the code. 
+ * Other than that, code is tested, and can send indivudla signals to all motors. 
+ */
+
 
 // Pulse for all motors set to 1000
-int global_PULSE[4] = {1000,1000,1000,1000};
-int order[4]        = {0,1,2,3};
-int difference[3]   = {0,0,0};
-// Pins for all motors
+int global_PULSE[4]     = {1000,1000,1000,1000};
+int order[4]            = {0,1,2,3};
+int buffer[4]           = {0,0,0,0};
+int buffer2[4]          = {0,0,0,0};
+int difference[4]   	= {0,0,0,0};
+// Pins for all motors 
 int PIN[4]= {7,0,2,3};
 pthread_mutex_t lock;
 
@@ -48,87 +57,60 @@ void setup()
 		delay(20 - (PULSE/1000));
 	}
 }
+void merging(int *copy, int low, int mid, int high) {
+    int l1, l2, i;
 
-/* Helper function for finding the max of two numbers */
-int max(int x, int y)
-{
-    if(x > y)
-    {
-        return x;
+
+    for(l1 = low, l2 = mid + 1, i = low; l1 <= mid && l2 <= high; i++) {
+        if(copy[l1] <= copy[l2])
+        {
+            buffer[i] = copy[l1];
+            buffer2[i] = order[l1];
+            l1++;
+        }
+        else
+        {
+            buffer[i] = copy[l2];
+            buffer2[i] = order[l2];
+            l2++;
+        }
     }
-    else
+
+    while(l1 <= mid)
     {
-        return y;
+        buffer[i] = copy[l1];
+        buffer2[i]= order[l1];
+        i++;l1++;
+    }
+    while(l2 <= high)
+    {
+        buffer[i] = copy[l2];
+        buffer2[i] = order[l2];
+        i++;l2++;
+    }
+
+    for(i = low; i <= high; i++)
+    {
+        copy[i] = buffer[i];
+        order[i] = buffer2[i];
     }
 }
 
-/* left is the index of the leftmost element of the subarray; right is one
- * past the index of the rightmost element */
-void merge_helper(int *input, int left, int right, int *scratch)
-{
-    /* base case: one element */
-    if(right == left + 1)
-    {
-        return;
-    }
-    else
-    {
-        int i = 0;
-        int length = right - left;
-        int midpoint_distance = length/2;
-        /* l and r are to the positions in the left and right subarrays */
-        int l = left, r = left + midpoint_distance;
+void sort(int *copy, int low, int high) {
+    int mid;
+    order[0] = 0;order[1] = 1;order[2] = 2;order[3]=3;
 
-        /* sort each subarray */
-        merge_helper(input, left, left + midpoint_distance, scratch);
-        merge_helper(input, left + midpoint_distance, right, scratch);
-
-        /* merge the arrays together using scratch for temporary storage */
-        for(i = 0; i < length; i++)
-        {
-            /* Check to see if any elements remain in the left array; if so,
-             * we check if there are any elements left in the right array; if
-             * so, we compare them.  Otherwise, we know that the merge must
-             * use take the element from the left array */
-            if(l < left + midpoint_distance &&
-                        (r == right || max(input[l], input[r]) == input[l]))
-            {
-                scratch[i] = input[l];
-                l++;
-            }
-            else
-            {
-                scratch[i] = input[r];
-                r++;
-            }
-        }
-        /* Copy the sorted subarray back to the input */
-        for(i = left; i < right; i++)
-        {
-            input[i] = scratch[i - left];
-        }
-    }
-}
-
-/* mergesort returns true on success.  Note that in C++, you could also
- * replace malloc with new and if memory allocation fails, an exception will
- * be thrown.  If we don't allocate a scratch array here, what happens?
- *
- * Elements are sorted in reverse order -- greatest to least */
-
-int mergesort(int *input, int size)
-{
-    int *scratch = (int *)malloc(size * sizeof(int));
-    if(scratch != NULL)
+    if(low < high)
     {
-        merge_helper(input, 0, size, scratch);
-        free(scratch);
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+        mid = (low + high) / 2;
+        sort(copy, low, mid);
+        sort(copy, mid+1, high);
+        merging(copy, low, mid, high);
+   }
+   else
+   {
+      return;
+   }
 }
 
 
@@ -145,6 +127,21 @@ void input_wait(void *ptr)
         // Input value in format 1000 1000 1000 1000
 		scanf("%d %d %d %d", &copy[0], &copy[1], &copy[2], &copy[3]);
         pthread_mutex_unlock(&lock);
+        sort(copy,0,3);
+        int i;
+        for (i = 0; i < 3; i++)
+        {
+			difference[i] = copy[i+1]-copy[i];
+		}
+        for (i = 0; i < 4; i++)
+        {		
+			printf("%d ",order[i]);
+		}
+		for (i = 0; i < 4; i++)
+        {
+			global_PULSE[i] = copy[i];
+		}
+		printf("\n");
 
         // perform calcs here to set output values for the order of which motors will be turned off
         // along with their speeds.
@@ -187,19 +184,19 @@ int main()
         // all motors start at same time.
         // motors turn off from low throttle -> high throttle.
 
-		digitalWrite(PIN[0],HIGH);
-		digitalWrite(PIN[1],HIGH);
-		digitalWrite(PIN[2],HIGH);
-		digitalWrite(PIN[3],HIGH);
+		digitalWrite(PIN[order[0]],HIGH);
+		digitalWrite(PIN[order[1]],HIGH);
+		digitalWrite(PIN[order[2]],HIGH);
+		digitalWrite(PIN[order[3]],HIGH);
 
 		delayMicroseconds(global_PULSE[0]);
-		digitalWrite(PIN[0],LOW);
+		digitalWrite(PIN[order[0]],LOW);
         delayMicroseconds(difference[0]);
-		digitalWrite(PIN[1],LOW);
+		digitalWrite(PIN[order[1]],LOW);
         delayMicroseconds(difference[1]);
-		digitalWrite(PIN[2],LOW);
+		digitalWrite(PIN[order[2]],LOW);
         delayMicroseconds(difference[2]);
-		digitalWrite(PIN[3],LOW);
+		digitalWrite(PIN[order[3]],LOW);
 
 		delay(20 - (global_PULSE[3]/1000));
     }
