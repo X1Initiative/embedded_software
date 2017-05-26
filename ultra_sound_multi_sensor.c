@@ -101,8 +101,13 @@ void *get_CM(void *ptr)
    int *sensor_num;
    sensor_num = (int *) ptr;
    int index = *sensor_num - 1;
-    
-   printf("Printing Value for Thread Number: %d\n", *sensor_num);
+   
+   //variables for filtering outliers
+   //set threshold
+   int threshold = 30;
+   int count = 0;
+   float total = 0;
+   float average = 0;
    
    //Wait for echo start
    while (1)
@@ -116,6 +121,17 @@ void *get_CM(void *ptr)
 	 
 	   //Get distance in cm
 	   distance[index] = travelTime / 58;
+	
+	   if (index == 0)
+	   {
+		   if ((distance[0] - average) > threshold) {}
+		   else { 
+				printf("Sensor Number: %d - Distance: %d\n",index,distance[index]);
+				count += 1;
+				total += distance[0];
+				average = total/count;
+			}
+		}
 	}
 }
 
@@ -136,14 +152,16 @@ int main(void) {
 			}
 		}
 		
+		int cnt = 0;
 		// Send pulse through TRIG for all sensors
-		while (1) {
+		while (cnt < 1000) {
 			digitalWrite(TRIG, HIGH);
-			delayMicroseconds(20);
+			delayMicroseconds(10);
 			digitalWrite(TRIG, LOW);
 			delayMicroseconds(500);
+			cnt += 1;
 		}
-		
+				
 		for (i = 0; i < 8; i++) {
 			rc = pthread_join(thread[i], &status);
 			printf("Distance for sensor %d: %d\n", i, distance[i]);
