@@ -102,12 +102,10 @@ void *get_CM(void *ptr)
    sensor_num = (int *) ptr;
    int index = *sensor_num - 1;
    
-   //variables for filtering outliers
-   //set threshold
-   int threshold = 30;
-   int count = 0;
-   float total = 0;
-   float average = 0;
+   // average stores rolling average of 10 distances
+   double average = 0.0, total = 0.0;
+   // temp_dist stores 10 distance values that have  already been processed
+   int count = 0, temp_dist[10];
    
    //Wait for echo start
    while (1)
@@ -123,14 +121,49 @@ void *get_CM(void *ptr)
 	   distance[index] = travelTime / 58;
 	
 	   if (index == 0)
-	   {
-		   if ((distance[0] - average) > threshold) {}
-		   else { 
-				printf("Sensor Number: %d - Distance: %d\n",index,distance[index]);
-				count += 1;
-				total += distance[0];
-				average = total/count;
+	   {				
+		   // total stores the sum of distances
+		   total += distance[0];
+		   // count keeps count
+		   count += 1;
+		   
+		   // for the first 10 distances read:
+		   if (count <= 10) {
+			// each one is stored in temp_dist
+			temp_dist[count%10] = distance[0];
+			// the average is computed based on the sum of distances and the count
+			average = total/count;
+			printf("Sensor Number: %d - Distance: %d\n",index,distance[index]);
+			//printf("Average: %f\n",average);
+		   } 
+		   // once count exceeds 10 and temp_dist is full with the first 10 distances:
+		   else {
+			// total is updated by deleting the first distance
+			// eg: when count = 11, distance read at count = 1 is subtracted
+			// similarly when count = 21, distance read at count = 11 is subtracted
+			total -= temp_dist[count%10];
+			
+			// a temporary average is computed and stored
+			float temp_avg = total/10;
+			
+			// if the temporary average exceeds the original average by a given factor then: 
+			if (temp_avg >= average*1.5) {
+				// the distance read for that particular iteration is disregarded
+				// to do this, it is subracted from total and the correspoding temp_dist is set = 0
+				total -= distance[0];
+				temp_dist[count%10] = 0;
 			}
+			// if the temporary average is within the set bounds then:
+			else {
+				// the average is updated to the new average
+				average = temp_avg;
+				// distance is stored in temp_dist
+				// eg: when count = 11, distance read is stored in temp_dist[1]
+				temp_dist[count%10] = distance[0];
+				printf("Sensor Number: %d - Distance: %d\n",index,distance[index]);
+				//printf("Average: %f\n",average);
+		    }
+		   }
 		}
 	}
 }
@@ -152,14 +185,12 @@ int main(void) {
 			}
 		}
 		
-		int cnt = 0;
 		// Send pulse through TRIG for all sensors
-		while (cnt < 1000) {
+		while (1) {
 			digitalWrite(TRIG, HIGH);
 			delayMicroseconds(10);
 			digitalWrite(TRIG, LOW);
 			delayMicroseconds(500);
-			cnt += 1;
 		}
 				
 		for (i = 0; i < 8; i++) {
