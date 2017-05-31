@@ -105,7 +105,7 @@ void *get_CM(void *ptr)
    // average stores rolling average of 10 distances
    double average = 0.0, total = 0.0;
    // temp_dist stores 10 distance values that have  already been processed
-   int count = 0, temp_dist[10];
+   int count = 1, temp_dist[10];
    
    //Wait for echo start
    while (1)
@@ -124,8 +124,6 @@ void *get_CM(void *ptr)
 	   {				
 		   // total stores the sum of distances
 		   total += distance[0];
-		   // count keeps count
-		   count += 1;
 		   
 		   // for the first 10 distances read:
 		   if (count <= 10) {
@@ -149,9 +147,9 @@ void *get_CM(void *ptr)
 			// if the temporary average exceeds the original average by a given factor then: 
 			if (temp_avg >= average*1.5) {
 				// the distance read for that particular iteration is disregarded
-				// to do this, it is subracted from total and the correspoding temp_dist is set = 0
+				// to do this, it is subracted from total and temp_dist is added back
 				total -= distance[0];
-				temp_dist[count%10] = 0;
+				total += temp_dist[count%10]
 			}
 			// if the temporary average is within the set bounds then:
 			else {
@@ -160,6 +158,8 @@ void *get_CM(void *ptr)
 				// distance is stored in temp_dist
 				// eg: when count = 11, distance read is stored in temp_dist[1]
 				temp_dist[count%10] = distance[0];
+				// finally, the count is incremented
+				count += 1;
 				printf("Sensor Number: %d - Distance: %d\n",index,distance[index]);
 				//printf("Average: %f\n",average);
 		    }
